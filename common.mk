@@ -18,6 +18,10 @@ DERP_VERSION_APPEND_TIME_OF_DAY=true
 EXTRA_UDFPS_ICONS=true
 TARGET_USES_PICO_GAPPS=true
 
+# Remove Packages
+PRODUCT_PACKAGES += \
+	RemovePackages
+
 # Setup dalvik vm configs
 $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 
