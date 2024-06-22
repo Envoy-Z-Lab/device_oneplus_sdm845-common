@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-DERP_BUILDTYPE=Official
+DERP_BUILDTYPE=Unofficial
 DERP_VERSION_APPEND_TIME_OF_DAY=true
 #EXTRA_UDFPS_ICONS=true
 TARGET_NOT_USES_BLUR=true
