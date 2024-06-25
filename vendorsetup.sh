@@ -40,26 +40,32 @@ EOF
     echo "Keys generated successfully in vendor/derp/signing/keys."
 }
 
-# Function to upload keys to Pixeldrain and retrieve download link
-upload_to_pixeldrain() {
+# Function to zip keys folder
+zip_keys_folder() {
     local keys_folder="vendor/derp/signing/keys"
     local zip_file="keys.zip"
     echo "Creating zip archive of keys folder..."
     zip -r "$zip_file" "$keys_folder" >/dev/null
-    echo "Uploading $zip_file to Pixeldrain..."
-    upload_response=$(curl -s -F "file=@$zip_file" https://pixeldrain.com/api/file)
-    upload_link=$(echo "$upload_response" | grep -o 'https://pixeldrain\.com/api/file/[^"]*')
-    download_link="${upload_link/api\/file/download}"
-    echo "$download_link"
-    # Clean up: delete the zip file after upload
-    rm "$zip_file"
+    echo "$zip_file"
+}
+
+# Function to upload keys to temp.sh and retrieve download link
+upload_to_tempsh() {
+    local zip_file="$1"
+    local upload_url="https://temp.sh/$zip_file"
+    echo "Uploading $zip_file to temp.sh..."
+    curl -T "$zip_file" "$upload_url" >/dev/null 2>&1
+    echo "$upload_url"
 }
 
 # Generate Android keys automatically
 generate_android_keys
 
-# Upload keys to Pixeldrain and display download link
-download_link=$(upload_to_pixeldrain)
+# Zip keys folder
+zip_file=$(zip_keys_folder)
+
+# Upload keys to temp.sh and display download link
+download_link=$(upload_to_tempsh "$zip_file")
 
 echo "Download link for the uploaded zip file:"
 echo "$download_link"
