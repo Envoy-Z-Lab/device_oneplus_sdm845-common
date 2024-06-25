@@ -52,10 +52,16 @@ zip_keys_folder() {
 # Function to upload keys to temp.sh and retrieve download link
 upload_to_tempsh() {
     local zip_file="$1"
-    local upload_url="https://temp.sh/$zip_file"
+    local upload_url="https://temp.sh/upload"
     echo "Uploading $zip_file to temp.sh..."
-    curl -T "$zip_file" "$upload_url" >/dev/null 2>&1
-    echo "$upload_url"
+
+    # Use curl to upload file via HTTP POST
+    response=$(curl -F "file=@$zip_file" $upload_url 2>/dev/null)
+
+    # Extract the URL from the response
+    download_link=$(echo "$response" | grep -o 'https://temp.sh/[A-Za-z0-9]*')
+
+    echo "$download_link"
 }
 
 # Generate Android keys automatically
