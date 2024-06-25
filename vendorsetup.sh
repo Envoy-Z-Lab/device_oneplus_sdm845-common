@@ -1,13 +1,46 @@
 #!/bin/bash
 
-# Function to download and run keygen.sh script
-run_keygen_script() {
-    local url="https://raw.githubusercontent.com/Envoy-Z-Lab/Signing-Script/main/keygen.sh"
-    echo "Downloading and running keygen.sh script..."
-    bash <(curl -s $url)
+# Function to generate Android keys without user interaction
+generate_android_keys() {
+    # Define the subject line
+    local subject='/C=US/ST=California/L=Mountain View/O=Android/OU=Android/CN=Android/emailAddress=android@android.com'
+
+    echo "Using Subject Line:"
+    echo "$subject"
+
+    # Remove existing Android certificates if found
+    if [ -d "$HOME/.android-certs" ]; then
+        rm -rf "$HOME/.android-certs"
+        echo "Old Android certificates removed."
+    fi
+
+    # Create Key without prompting
+    mkdir -p ~/.android-certs
+    for x in bluetooth media networkstack nfc platform releasekey sdk_sandbox shared testkey verifiedboot; do 
+        ./development/tools/make_key ~/.android-certs/$x "$subject" <<< $'\n\n\n\n\n\n\n\n\n\n'
+    done
+
+    # Move keys to vendor directory
+    mkdir -p vendor/lineage-priv
+    mv ~/.android-certs vendor/lineage-priv/keys
+    echo "PRODUCT_DEFAULT_DEV_CERTIFICATE := vendor/lineage-priv/keys/releasekey" > vendor/lineage-priv/keys/keys.mk
+
+    # Create BUILD.bazel file
+    cat <<EOF > vendor/lineage-priv/keys/BUILD.bazel
+filegroup(
+    name = "android_certificate_directory",
+    srcs = glob([
+        "*.pk8",
+        "*.pem",
+    ]),
+    visibility = ["//visibility:public"],
+)
+EOF
+
+    echo "Keys generated successfully."
 }
 
-# Function to create a zip archive of keys folder and upload it to Pixeldrain
+# Function to upload keys to Pixeldrain and retrieve download link
 upload_to_pixeldrain() {
     local keys_folder="vendor/lineage-priv/keys"
     local zip_file="keys.zip"
@@ -16,17 +49,14 @@ upload_to_pixeldrain() {
     echo "Uploading $zip_file to Pixeldrain..."
     upload_response=$(curl -s -F "file=@$zip_file" https://pixeldrain.com/api/file)
     upload_link=$(echo "$upload_response" | grep -o 'https://pixeldrain\.com/api/file/[^"]*')
-    # Generate download link for the uploaded file
     download_link="${upload_link/api\/file/download}"
     echo "$download_link"
-    # Clean up zip file after upload
-    rm "$zip_file"
 }
 
-# Run the keygen.sh script from GitHub
-run_keygen_script
+# Generate Android keys automatically
+generate_android_keys
 
-# Upload the keys folder as a zip file to Pixeldrain and display the download link
+# Upload keys to Pixeldrain and display download link
 download_link=$(upload_to_pixeldrain)
 
 echo "Download link for the uploaded zip file:"
