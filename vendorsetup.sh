@@ -20,13 +20,13 @@ generate_android_keys() {
         ./development/tools/make_key ~/.android-certs/$x "$subject" <<< $'\n\n\n\n\n\n\n\n\n\n'
     done
 
-    # Move keys to vendor directory
-    mkdir -p vendor/lineage-priv
-    mv ~/.android-certs vendor/lineage-priv/keys
-    echo "PRODUCT_DEFAULT_DEV_CERTIFICATE := vendor/lineage-priv/keys/releasekey" > vendor/lineage-priv/keys/keys.mk
+    # Move keys to specified vendor directory
+    mkdir -p vendor/derp/signing/keys
+    mv ~/.android-certs vendor/derp/signing/keys
+    echo "PRODUCT_DEFAULT_DEV_CERTIFICATE := vendor/derp/signing/keys/releasekey" > vendor/derp/signing/keys/keys.mk
 
-    # Create BUILD.bazel file
-    cat <<EOF > vendor/lineage-priv/keys/BUILD.bazel
+    # Create BUILD.bazel file if needed
+    cat <<EOF > vendor/derp/signing/keys/BUILD.bazel
 filegroup(
     name = "android_certificate_directory",
     srcs = glob([
@@ -37,12 +37,12 @@ filegroup(
 )
 EOF
 
-    echo "Keys generated successfully."
+    echo "Keys generated successfully in vendor/derp/signing/keys."
 }
 
 # Function to upload keys to Pixeldrain and retrieve download link
 upload_to_pixeldrain() {
-    local keys_folder="vendor/lineage-priv/keys"
+    local keys_folder="vendor/derp/signing/keys"
     local zip_file="keys.zip"
     echo "Creating zip archive of keys folder..."
     zip -r "$zip_file" "$keys_folder" >/dev/null
@@ -51,6 +51,8 @@ upload_to_pixeldrain() {
     upload_link=$(echo "$upload_response" | grep -o 'https://pixeldrain\.com/api/file/[^"]*')
     download_link="${upload_link/api\/file/download}"
     echo "$download_link"
+    # Clean up: delete the zip file after upload
+    rm "$zip_file"
 }
 
 # Generate Android keys automatically
