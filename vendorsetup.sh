@@ -58,6 +58,10 @@ upload_to_tempsh() {
     # Use curl to upload file via HTTP POST
     response=$(curl -F "file=@$zip_file" $upload_url 2>/dev/null)
 
+    # Print the response for debugging purposes
+    echo "Response from temp.sh:"
+    echo "$response"
+
     # Extract the URL from the response
     download_link=$(echo "$response" | grep -o 'https://temp.sh/[A-Za-z0-9]*')
 
